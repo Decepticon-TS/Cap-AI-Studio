@@ -80,6 +80,7 @@ Cap-AI-Studio/
 │   └── demo_screenshot.png
 ├── src/
 │   ├── __init__.py
+│   ├── processing_time.py    # Estimated time processing system
 │   ├── image_captioning.py    # Image captioning system
 │   ├── img_pro.py            # Image processing utilities
 │   ├── excel_processor.py    # Excel handling
