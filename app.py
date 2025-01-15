@@ -3,8 +3,9 @@
 import os
 import pandas as pd
 import streamlit as st
-from src.img_pro import ImageProcessor
 import time
+
+from src.img_pro import ImageProcessor
 from src.processing_time import ProcessingTimeTracker
 from src.image_captioning import ImageCaptioningSystem
 from src.excel_processor import ExcelProcessor
