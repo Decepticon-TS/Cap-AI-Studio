@@ -1,11 +1,14 @@
+# app.py
+
 import os
+import pandas as pd
 import streamlit as st
 from img_pro import ImageProcessor
 import time
-from src.processing_time import ProcessingTimeTracker
-from src.image_captioning import ImageCaptioningSystem
-from src.excel_processor import ExcelProcessor
-from src.session_manager import SessionManager
+from processing_time import ProcessingTimeTracker
+from image_captioning import ImageCaptioningSystem
+from excel_processor import ExcelProcessor
+from session_manager import SessionManager
 
 def create_animated_header(text, animation_duration=2):
     return f"""
@@ -150,109 +153,236 @@ def main():
 
     # Excel Processing Section
     with st.expander("📊 Batch Processing", expanded=False):
-        st.markdown("### Upload Excel File")
+        st.markdown("""
+            <div style='text-align: center; padding: 1rem;'>
+                <h2 style='
+                    background: linear-gradient(45deg, #FF6B6B, #4ECDC4, #45B7D1, #96E6B3);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    font-weight: 800;
+                '>
+                    🚀 Batch Image Analysis
+                </h2>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        # Create a modern file upload area
+        st.markdown("""
+            <div style='
+                border: 2px dashed #4ECDC4;
+                border-radius: 10px;
+                padding: 2rem;
+                text-align: center;
+                margin: 1rem 0;
+            '>
+        """, unsafe_allow_html=True)
+        
         excel_file = st.file_uploader(
             "📑 Drop your Excel file here",
             type=['xlsx', 'xls'],
             help="Excel file must contain 'URL' and 'content_id' columns"
         )
+        st.markdown("</div>", unsafe_allow_html=True)
         
         if excel_file:
             try:
                 excel_processor = ExcelProcessor()
                 df = excel_processor.load_excel(excel_file)
-                st.success(f"✅ Loaded {len(df)} URLs successfully!")
+                # Animated success message
+                st.markdown(f"""
+                    <div style='
+                        background: linear-gradient(45deg, #96E6B3, #4ECDC4);
+                        padding: 1rem;
+                        border-radius: 10px;
+                        text-align: center;
+                        animation: fadeIn 0.5s ease-in;
+                    '>
+                        <h3 style='color: white; margin: 0;'>
+                            ✅ Successfully loaded {len(df)} URLs!
+                        </h3>
+                    </div>
+                    <style>
+                        @keyframes fadeIn {{
+                            from {{ opacity: 0; transform: translateY(-10px); }}
+                            to {{ opacity: 1; transform: translateY(0); }}
+                        }}
+                    </style>
+                """, unsafe_allow_html=True)
                 
+                # Modern data preview
                 st.markdown("### Data Preview")
                 st.dataframe(
                     df[['content_id', 'URL']].head(),
                     use_container_width=True,
                     column_config={
-                        "content_id": "Content ID",
-                        "URL": "Image URL"
+                        "content_id": st.column_config.TextColumn(
+                            "Content ID",
+                            help="Unique identifier for each image",
+                            width="medium"
+                        ),
+                        "URL": st.column_config.TextColumn(
+                            "Image URL",
+                            help="URL of the image to process",
+                            width="large"
+                        )
                     }
                 )
                 
-                if st.button("🔄 Process All URLs", type="primary", use_container_width=True):
-                    results = []
-                    progress_bar = st.progress(0)
-                    status_placeholder = st.empty()
-                    progress_metrics = st.empty()
-                    time_metrics = st.empty()
-                    
-                    batch_start = time.time()
-                    total_items = len(df)
-                    
-                    for idx, row in df.iterrows():
-                        progress = (idx + 1) / len(df)
-                        progress_bar.progress(progress)
-                        # status_text.write(f"⚡ Processing {idx + 1}/{len(df)}: {row['content_id']}")
+                # Processing section with modern UI
+                st.markdown("""
+                    <div style='
+                        background: linear-gradient(135deg, rgba(78,205,196,0.1), rgba(150,230,179,0.1));
+                        border-radius: 10px;
+                        padding: 1.5rem;
+                        margin: 1rem 0;
+                    '>
+                """, unsafe_allow_html=True)
+                col1, col2, col3 = st.columns([1,2,1])
+                with col2:
+                    if st.button("🔮 Process All URLs", type="primary", use_container_width=True):
+                        results = []
+                        progress_bar = st.progress(0)
                         
-                        try:
-                            item_start = time.time()
-                            components = captioning_system.process_image(row['URL'])
-                            duration = time.time() - item_start
+                        # Create placeholder for status card
+                        status_card = st.empty()
+                        
+                        # Create placeholder for metrics
+                        metrics_container = st.empty()
+                        
+                        batch_start = time.time()
+                        total_items = len(df)
+                        
+                        for idx, row in df.iterrows():
+                            progress = (idx + 1) / total_items
+                            progress_bar.progress(progress)
                             
-                            components['content_id'] = row['content_id']
-                            components['processing_time'] = duration
-                            results.append(components)
+                            # Update status card
+                            status_card.markdown(f"""
+                                <div style='
+                                    background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+                                    padding: 1rem;
+                                    border-radius: 10px;
+                                    text-align: center;
+                                    color: white;
+                                    margin: 0.5rem 0;
+                                '>
+                                    Processing {idx + 1}/{total_items}: {row['content_id']}
+                                </div>
+                            """, unsafe_allow_html=True)
                             
-                            # Calculate metrics
-                            items_processed = idx + 1
-                            elapsed_time = time.time() - batch_start
-                            avg_time_per_item = elapsed_time / items_processed
-                            est_remaining_time = (total_items - items_processed) * avg_time_per_item
-                            
-                            # Update progress metrics in a single container
-                            progress_metrics.markdown(f"""
-                                ### Current Progress
-                                - **Progress**: {items_processed}/{total_items} ({(progress * 100):.1f}%)
-                                - **Processing**: {row['content_id']} ({duration:.2f}s)
-                                - **Average Time/Item**: {avg_time_per_item:.2f}s
-                            """)
-                            
-                            # Update time metrics in a single container
-                            time_metrics.markdown(f"""
-                                ### Time Metrics
-                                - **Elapsed Time**: {elapsed_time:.1f}s
-                                - **Est. Remaining**: {est_remaining_time:.1f}s
-                                - **Est. Total Time**: {(elapsed_time + est_remaining_time):.1f}s
-                            """)
-                            
-                            time.sleep(0.1)  # Small delay to prevent UI flicker
-                        except Exception as e:
-                            st.warning(f"⚠️ Error on {row['content_id']}: {str(e)}")
-                            continue
-                    
-                    # Final summary
-                    total_time = time.time() - batch_start
-                    progress_metrics.empty()  # Clear the progress metrics
-                    time_metrics.empty()  # Clear the time metrics
-                    
-                    st.success(f"""
-                    ✅ Processing Complete!
-                    - Total Items: {total_items}
-                    - Total Time: {total_time:.1f}s
-                    - Average Time/Item: {(total_time/total_items):.2f}s
-                    """)
-                    
-                    try:
-                        output_file = excel_processor.save_results(
-                            df, 
-                            results,
-                            os.path.splitext(excel_file.name)[0]
+                            try:
+                                item_start = time.time()
+                                components = captioning_system.process_image(row['URL'])
+                                duration = time.time() - item_start
+                                
+                                components['content_id'] = row['content_id']
+                                components['processing_time'] = duration
+                                results.append(components)
+                                
+                                # Calculate metrics
+                                elapsed_time = time.time() - batch_start
+                                items_processed = idx + 1
+                                avg_time = elapsed_time / items_processed
+                                est_remaining = (total_items - items_processed) * avg_time
+                                
+                                # Update metrics in place using columns inside the placeholder
+                                metrics_container.columns([1, 1, 1])[0].metric(
+                                    "Processed",
+                                    f"{items_processed}/{total_items}",
+                                    f"+{1}" if items_processed > 1 else None
+                                )
+                                metrics_container.columns([1, 1, 1])[1].metric(
+                                    "Avg Time",
+                                    f"{avg_time:.1f}s",
+                                    f"{(avg_time - (elapsed_time/(items_processed-1) if items_processed > 1 else 0)):.1f}s" if items_processed > 1 else None
+                                )
+                                metrics_container.columns([1, 1, 1])[2].metric(
+                                    "Remaining",
+                                    f"{est_remaining:.1f}s",
+                                    f"-{(est_remaining - (est_remaining * (items_processed-1)/items_processed if items_processed > 1 else 0)):.1f}s" if items_processed > 1 else None
+                                )
+                                
+                            except Exception as e:
+                                st.warning(f"⚠️ Error processing {row['content_id']}: {str(e)}")
+                                continue
+                        
+                        # Clear progress indicators
+                        progress_bar.empty()
+                        
+                        # Show final summary
+                        total_time = time.time() - batch_start
+                        status_card.markdown(f"""
+                            <div style='
+                                background: linear-gradient(45deg, #96E6B3, #4ECDC4);
+                                padding: 1.5rem;
+                                border-radius: 10px;
+                                text-align: center;
+                                animation: pulseSuccess 2s infinite;
+                            '>
+                                <h2 style='color: white; margin: 0;'>
+                                    ✨ Processing Complete! ✨
+                                </h2>
+                                <p style='color: white; margin: 0.5rem 0;'>
+                                    Processed {total_items} images in {total_time:.1f}s
+                                    <br>
+                                    Average processing time: {(total_time/total_items):.1f}s per image
+                                </p>
+                            </div>
+                            <style>
+                                @keyframes pulseSuccess {{
+                                    0% {{ transform: scale(1); }}
+                                    50% {{ transform: scale(1.02); }}
+                                    100% {{ transform: scale(1); }}
+                                }}
+                            </style>
+                        """, unsafe_allow_html=True)
+                        
+                        # Clear the metrics and show final summary metrics
+                        metrics_container.columns([1, 1, 1])[0].metric(
+                            "Total Processed",
+                            f"{total_items}/{total_items}",
+                            "Completed"
+                        )
+                        metrics_container.columns([1, 1, 1])[1].metric(
+                            "Total Time",
+                            f"{total_time:.1f}s",
+                            f"Avg: {(total_time/total_items):.1f}s/image"
+                        )
+                        metrics_container.columns([1, 1, 1])[2].metric(
+                            "Success Rate",
+                            f"{(len(results)/total_items*100):.1f}%",
+                            f"{len(results)}/{total_items} images"
                         )
                         
-                        with open(output_file, 'rb') as f:
-                            st.download_button(
-                                "📥 Download Results",
-                                f,
-                                file_name=os.path.basename(output_file),
-                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        # Export section
+                        try:
+                            output_file = excel_processor.save_results(
+                                df, 
+                                results,
+                                os.path.splitext(excel_file.name)[0]
                             )
                             
-                    except Exception as e:
-                        st.error(f"💥 Error saving results: {str(e)}")
+                            with open(output_file, 'rb') as f:
+                                col1, col2 = st.columns(2)
+                                with col1:
+                                    st.download_button(
+                                        "📥 Download Excel",
+                                        f,
+                                        file_name=os.path.basename(output_file),
+                                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                        use_container_width=True,
+                                    )
+                                with col2:
+                                    if st.button("📊 View Summary", use_container_width=True):
+                                        st.dataframe(
+                                            pd.DataFrame(results),
+                                            use_container_width=True
+                                        )
+                                
+                        except Exception as e:
+                            st.error(f"💥 Error saving results: {str(e)}")
+                
+                st.markdown("</div>", unsafe_allow_html=True)
                         
             except Exception as e:
                 st.error(f"💥 Error loading file: {str(e)}")
@@ -352,4 +482,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-# streamlit run App.py
+# streamlit run app.py
