@@ -5,10 +5,10 @@ import pandas as pd
 import streamlit as st
 from img_pro import ImageProcessor
 import time
-from processing_time import ProcessingTimeTracker
-from image_captioning import ImageCaptioningSystem
-from excel_processor import ExcelProcessor
-from session_manager import SessionManager
+from src.processing_time import ProcessingTimeTracker
+from src.image_captioning import ImageCaptioningSystem
+from src.excel_processor import ExcelProcessor
+from src.session_manager import SessionManager
 
 def create_animated_header(text, animation_duration=2):
     return f"""
