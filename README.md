@@ -7,7 +7,7 @@
 
 A powerful, modern web application for advanced image analysis and batch processing using Google's Gemini API and Streamlit. Features a beautiful, intuitive interface with real-time processing capabilities and comprehensive reporting options.
 
-![AI Vision Studio Demo](assets/demo_screenshot.png)
+![AI Vision Studio Demo](assets/demo_screensdhot.png)
 
 ## ✨ Features
 
