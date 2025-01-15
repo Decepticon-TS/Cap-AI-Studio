@@ -2,6 +2,7 @@ import os
 import streamlit as st
 from img_pro import ImageProcessor
 import time
+from processing_time import ProcessingTimeTracker
 from image_captioning import ImageCaptioningSystem
 from excel_processor import ExcelProcessor
 from session_manager import SessionManager
@@ -36,6 +37,7 @@ def initialize_session_manager():
     return st.session_state.session_manager
 
 def main():
+    time_tracker = ProcessingTimeTracker()
     st.set_page_config(
         page_title="✨ AI Vision Studio",
         layout="wide",
@@ -174,21 +176,65 @@ def main():
                 if st.button("🔄 Process All URLs", type="primary", use_container_width=True):
                     results = []
                     progress_bar = st.progress(0)
-                    status_text = st.empty()
+                    status_placeholder = st.empty()
+                    progress_metrics = st.empty()
+                    time_metrics = st.empty()
+                    
+                    batch_start = time.time()
+                    total_items = len(df)
                     
                     for idx, row in df.iterrows():
                         progress = (idx + 1) / len(df)
                         progress_bar.progress(progress)
-                        status_text.write(f"⚡ Processing {idx + 1}/{len(df)}: {row['content_id']}")
+                        # status_text.write(f"⚡ Processing {idx + 1}/{len(df)}: {row['content_id']}")
                         
                         try:
+                            item_start = time.time()
                             components = captioning_system.process_image(row['URL'])
+                            duration = time.time() - item_start
+                            
                             components['content_id'] = row['content_id']
+                            components['processing_time'] = duration
                             results.append(components)
-                            time.sleep(1)
+                            
+                            # Calculate metrics
+                            items_processed = idx + 1
+                            elapsed_time = time.time() - batch_start
+                            avg_time_per_item = elapsed_time / items_processed
+                            est_remaining_time = (total_items - items_processed) * avg_time_per_item
+                            
+                            # Update progress metrics in a single container
+                            progress_metrics.markdown(f"""
+                                ### Current Progress
+                                - **Progress**: {items_processed}/{total_items} ({(progress * 100):.1f}%)
+                                - **Processing**: {row['content_id']} ({duration:.2f}s)
+                                - **Average Time/Item**: {avg_time_per_item:.2f}s
+                            """)
+                            
+                            # Update time metrics in a single container
+                            time_metrics.markdown(f"""
+                                ### Time Metrics
+                                - **Elapsed Time**: {elapsed_time:.1f}s
+                                - **Est. Remaining**: {est_remaining_time:.1f}s
+                                - **Est. Total Time**: {(elapsed_time + est_remaining_time):.1f}s
+                            """)
+                            
+                            time.sleep(0.1)  # Small delay to prevent UI flicker
                         except Exception as e:
                             st.warning(f"⚠️ Error on {row['content_id']}: {str(e)}")
                             continue
+                    
+                    # Final summary
+                    total_time = time.time() - batch_start
+                    progress_metrics.empty()  # Clear the progress metrics
+                    time_metrics.empty()  # Clear the time metrics
+                    
+                    st.success(f"""
+                    ✅ Processing Complete!
+                    - Total Items: {total_items}
+                    - Total Time: {total_time:.1f}s
+                    - Average Time/Item: {(total_time/total_items):.2f}s
+                    """)
                     
                     try:
                         output_file = excel_processor.save_results(
@@ -196,7 +242,6 @@ def main():
                             results,
                             os.path.splitext(excel_file.name)[0]
                         )
-                        st.success("✅ Processing complete!")
                         
                         with open(output_file, 'rb') as f:
                             st.download_button(
@@ -263,11 +308,13 @@ def main():
                 if st.button("✨ Analyze Image", type="primary", use_container_width=True):
                     with st.spinner("🔮 Processing image..."):
                         progress = st.progress(0)
-                        for i in range(100):
-                            time.sleep(0.01)
-                            progress.progress(i + 1)
-                            
+                        start_time = time_tracker.start_operation()
                         components = captioning_system.process_image(image_input)
+                        duration = time_tracker.end_operation(start_time, 'single' if not isinstance(image_input, str) else 'url')
+                        
+                        st.markdown("### ⏱️ Processing Metrics")
+                        time_tracker.display_metrics('single' if not isinstance(image_input, str) else 'url')
+                        st.info(f"Current processing time: {duration:.2f} seconds")
                         progress.empty()
                     
                     tab1, tab2, tab3 = st.tabs([
@@ -305,3 +352,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+# streamlit run App.py
