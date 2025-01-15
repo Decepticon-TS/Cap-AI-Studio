@@ -3,7 +3,7 @@
 import os
 import pandas as pd
 import streamlit as st
-from img_pro import ImageProcessor
+from src.img_pro import ImageProcessor
 import time
 from src.processing_time import ProcessingTimeTracker
 from src.image_captioning import ImageCaptioningSystem
