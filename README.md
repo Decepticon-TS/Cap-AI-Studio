@@ -3,7 +3,7 @@
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.28%2B-FF4B4B.svg)](https://streamlit.io)
 [![Google Gemini](https://img.shields.io/badge/Google%20Gemini-API-orange.svg)](https://cloud.google.com/vertex-ai/docs/generative-ai/model-reference/gemini)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 A powerful, modern web application for advanced image analysis and batch processing using Google's Gemini API and Streamlit. Features a beautiful, intuitive interface with real-time processing capabilities and comprehensive reporting options.
 
